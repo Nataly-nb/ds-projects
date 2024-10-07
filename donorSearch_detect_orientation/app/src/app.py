@@ -1,55 +1,73 @@
-import pandas as pd
-import numpy as np
-import os
-import torch
-
-import torch.nn as nn
-from torchvision.models import resnet50, ResNet50_Weights
-from torchvision import transforms
-from tqdm.notebook import tqdm
-from PIL import Image
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import f1_score, classification_report, ConfusionMatrixDisplay, confusion_matrix
-from fastai.vision.all import *
-import warnings
+import argparse
 import logging
+import os
+import uvicorn
+from fastapi import FastAPI, UploadFile, Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
-warnings.filterwarnings("ignore")
+from service import rotate_and_save
 
-m_logger = logging.getLogger(__name__)
-m_logger.setLevel(logging.DEBUG)
-handler_m = logging.StreamHandler()
-formatter_m = logging.Formatter("%(name)s %(asctime)s %(levelname)s %(message)s")
-handler_m.setFormatter(formatter_m)
-m_logger.addHandler(handler_m)
+app = FastAPI()
 
-# Загрузка модели
-model = load_learner('my_resnet50_export.pkl')
+tmppath = r'tmp/'
+resultpath = r'tmp/result/'
+if not os.path.exists(tmppath): os.makedirs(tmppath)
+if not os.path.exists(resultpath): os.makedirs(resultpath)
 
-def predict_orientation(image_path):
-    img = PILImage.create(image_path)
-    pred, _, _ = model.predict(img)
-    return int(pred)
+app.mount("/tmp", StaticFiles(directory="tmp"), name='images')
+templates = Jinja2Templates(directory="templates")
+
+app_logger = logging.getLogger(__name__)
+app_logger.setLevel(logging.INFO)
+app_handler = logging.StreamHandler()
+app_formatter = logging.Formatter("%(name)s %(asctime)s %(levelname)s %(message)s")
+app_handler.setFormatter(app_formatter)
+app_logger.addHandler(app_handler)
+
+INP_SIZE = 224
+DEVICE = "cpu"
 
 
-def rotate_and_save(image_path, output_path):
-    # Определение ориентации с помощью вашей модели
-    orientation = predict_orientation(image_path)
+# image size according to other applications
 
-    # Загрузка изображения
-    image = Image.open(image_path)
 
-    # Поворот изображения в зависимости от ориентации
-    if orientation == 1:
-        rotated_image = image.rotate(-90, expand=True)
-    elif orientation == 2:
-        rotated_image = image.rotate(-180, expand=True)
-    elif orientation == 3:
-        rotated_image = image.rotate(-270, expand=True)
-    else:
-        rotated_image = image  # Если ориентация уже 0, оставляем как есть
+@app.get("/health")
+def health():
+    return {"status": "OK"}
 
-    # Сохранение повернутого изображения
-    rotated_image.save(output_path)
-    print(f"Изображение сохранено с ориентацией 0 градусов: {output_path}")
-    return f"Изображение сохранено с ориентацией 0 градусов: {output_path}"
+
+@app.get("/")
+def main(request: Request):
+    return templates.TemplateResponse("start_form.html",
+                                      {"request": request})
+
+
+@app.post("/predict-detect")
+def process_request(file: UploadFile, request: Request):
+    """save file to the local folder and send the image to the process function"""
+
+    # путь к тестовой картинке
+    input_image_path = tmppath + file.filename
+    # путь к папке куда падает уже перевернутая картинка
+    output_image_path = resultpath + file.filename
+
+
+    #save_pth = "tmp/" + file.filename
+    app_logger.info(f'processing file - segmentation {input_image_path}')
+    with open(input_image_path, "wb") as fid:
+        fid.write(file.file.read())
+    result = rotate_and_save(input_image_path, output_image_path)
+
+    return templates.TemplateResponse('detect_form.html',
+                                      {"request": request,
+                                       "result": result})
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--port", default=8000, type=int, dest="port")
+    parser.add_argument("--host", default="0.0.0.0", type=str, dest="host")
+    args = vars(parser.parse_args())
+
+    uvicorn.run(app, **args)
