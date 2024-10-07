@@ -1,8 +1,8 @@
-from PIL import Image
-import fastai
-from fastai.vision.all import *
-import warnings
 import logging
+import warnings
+
+from PIL import Image
+from fastai.vision.all import *
 
 warnings.filterwarnings("ignore")
 
