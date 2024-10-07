@@ -1,17 +1,5 @@
-import pandas as pd
-import numpy as np
-import os
-import matplotlib.pyplot as plt
-import torch
-#import seaborn as sns
-
-import torch.nn as nn
-from torchvision.models import resnet50, ResNet50_Weights
-from torchvision import transforms
-from tqdm.notebook import tqdm
 from PIL import Image
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import f1_score, classification_report, ConfusionMatrixDisplay, confusion_matrix
+import fastai
 from fastai.vision.all import *
 import warnings
 import logging
