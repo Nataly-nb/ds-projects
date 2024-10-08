@@ -1,8 +1,8 @@
 import logging
 import warnings
 
-from PIL import Image
 from fastai.vision.all import *
+from PIL import Image
 
 warnings.filterwarnings("ignore")
 
@@ -41,5 +41,5 @@ def rotate_and_save(image_path, output_path):
 
     # Сохранение повернутого изображения
     rotated_image.save(output_path)
-    print(f"Изображение сохранено с ориентацией 0 градусов: {output_path}")
-    return f"Изображение сохранено с ориентацией 0 градусов: {output_path}"
+    print(f"Изображение сохранено с ориентацией 0 градусов в папку: {output_path}")
+    return f"Изображение сохранено с ориентацией 0 градусов в папку: {output_path}"
