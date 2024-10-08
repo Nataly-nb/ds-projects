@@ -29,19 +29,20 @@ app_logger.addHandler(app_handler)
 INP_SIZE = 224
 DEVICE = "cpu"
 
+LOGOPATH = 'tmp/logo4.jpg'  #'templates/img/logo3.jpg'
 
 # image size according to other applications
-
 
 @app.get("/health")
 def health():
     return {"status": "OK"}
 
 
-@app.get("/")
+@app.get('/')
 def main(request: Request):
     return templates.TemplateResponse("start_form.html",
-                                      {"request": request})
+                                      {"request": request,
+                                       "logopath": LOGOPATH})
 
 
 @app.post("/predict-detect")
@@ -62,7 +63,9 @@ def process_request(file: UploadFile, request: Request):
 
     return templates.TemplateResponse('detect_form.html',
                                       {"request": request,
-                                       "result": result})
+                                       "result": result,
+                                       "outpath": output_image_path,
+                                       "inputpath": input_image_path})
 
 
 if __name__ == "__main__":
