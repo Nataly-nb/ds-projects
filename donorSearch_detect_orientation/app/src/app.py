@@ -28,8 +28,7 @@ app_logger.addHandler(app_handler)
 
 INP_SIZE = 224
 DEVICE = "cpu"
-
-LOGOPATH = 'tmp/logo4.jpg'  #'templates/img/logo3.jpg'
+LOGOPATH = 'tmp/logo.jpg'  #'templates/img/logo3.jpg'
 
 # image size according to other applications
 
