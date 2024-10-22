@@ -14,7 +14,7 @@ handler_m.setFormatter(formatter_m)
 m_logger.addHandler(handler_m)
 
 # Загрузка модели
-model = load_learner('my_resnet50_export.pkl')
+model = load_learner('resnet50.pkl')
 
 def predict_orientation(image_path):
     img = PILImage.create(image_path)
